@@ -64,5 +64,6 @@ class CreationsTextView(View):
             print("{0} creations:".format(len(self.model)))
             for creation in self.model:
                 print(str(creation))
+
         else:
             print("No creations to print!")

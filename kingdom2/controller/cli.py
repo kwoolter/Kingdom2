@@ -65,7 +65,6 @@ class GameCLI(cmd.Cmd):
 
     def do_test(self, arg):
 
-
         resource_types = model.ResourceFactory.get_resource_types()
 
         for type in resource_types:

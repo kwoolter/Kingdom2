@@ -37,7 +37,7 @@ class Creatable():
 
         if len(self.pre_requisites.keys()) > 0:
             for k,v in self.pre_requisites.items():
-                _str += "\n\t{0} ({1}) : {2}".format(k.name, k.description, v)
+                _str += "\n\t{0}:{1}".format(k, v)
 
         return _str
 
@@ -56,12 +56,12 @@ class Creatable():
 
         return percent_complete
 
-    def add_pre_requisite(self, new_resource : Resource, item_count : int = 1):
+    def add_pre_requisite(self, new_resource_name : str, item_count : int = 1):
 
-        if new_resource not in self.pre_requisites.keys():
-            self.pre_requisites[new_resource] = 0
+        if new_resource_name not in self.pre_requisites.keys():
+            self.pre_requisites[new_resource_name] = 0
 
-        self.pre_requisites[new_resource] += item_count
+        self.pre_requisites[new_resource_name] += item_count
 
     def add_output(self, new_resource : Resource, item_count : int = 1):
 
@@ -100,7 +100,8 @@ class Inventory():
 
         is_creatable = True
 
-        for pre_req, count in new_creatable.pre_requisites.items():
+        for pre_req_name, count in new_creatable.pre_requisites.items():
+            pre_req = ResourceFactory.get_resource(pre_req_name)
             if pre_req not in self.resources.keys():
                 is_creatable = False
                 break
@@ -262,20 +263,23 @@ class CreatableFactoryXML(object):
             logging.info("%s.load(): Loading Creatable '%s'...", __class__, new_creatable.name)
 
             # Next get a list of all of the pre-requisites
-            pre_requisites = creatable.getElementsByTagName("pre_requisites")
+            pre_requisites = creatable.getElementsByTagName("pre_requisites")[0]
+            resources = pre_requisites.getElementsByTagName("resource")
 
             # For each pre-requisite resource...
-            for resource in pre_requisites:
+            for resource in resources:
 
                 # Get the basic details of the resource
                 name = self.xml_get_node_text(resource, "name")
                 count = self.xml_get_node_value(resource, "count")
 
-                new_resource = ResourceFactory.get_resource_copy(name)
-                new_creatable.add_pre_requisite(new_resource, count)
+                new_creatable.add_pre_requisite(name, count)
 
+                logging.info("{0}.load(): adding pre-req {1} ({2})".format(__class__, new_creatable.name, count))
 
             logging.info("{0}.load(): Creatable '{1}' loaded".format(__class__, new_creatable.name))
+            print(str(new_creatable))
+
 
             # Add the new creatable to the dictionary
             self._creatables[new_creatable.name] = new_creatable

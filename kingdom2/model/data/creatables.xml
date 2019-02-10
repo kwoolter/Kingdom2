@@ -18,6 +18,10 @@
                 <name>Rice</name>
                 <count>10</count>
             </resource>
+            <resource>
+                <name>XP</name>
+                <count>10</count>
+            </resource>
         </outputs>
     </creatable>
     <creatable id="Medium Wooden House">
@@ -39,9 +43,13 @@
                 <name>Rice</name>
                 <count>10</count>
             </resource>
+            <resource>
+                <name>XP</name>
+                <count>10</count>
+            </resource>
         </outputs>
     </creatable>
-        <creatable id="Large Wooden House">
+    <creatable id="Large Wooden House">
         <name>Large Wooden House</name>
         <description>A large wooden house</description>
         <ticks_required>15</ticks_required>
@@ -58,6 +66,27 @@
         <outputs>
             <resource>
                 <name>Rice</name>
+                <count>10</count>
+            </resource>
+            <resource>
+                <name>XP</name>
+                <count>10</count>
+            </resource>
+        </outputs>
+    </creatable>
+        <creatable id="Small Brick House">
+        <name>Small Brick House</name>
+        <description>A small birck wooden house</description>
+        <ticks_required>15</ticks_required>
+        <pre_requisites>
+            <resource>
+                <name>Bricks</name>
+                <count>20</count>
+            </resource>
+        </pre_requisites>
+        <outputs>
+            <resource>
+                <name>XP</name>
                 <count>10</count>
             </resource>
         </outputs>
