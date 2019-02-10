@@ -70,13 +70,12 @@ class GameCLI(cmd.Cmd):
 
         for type in resource_types:
             new_resource = model.ResourceFactory.get_resource(type)
-            self.model.inventory.add_resource(new_resource, random.randint(1,3))
+            self.model.inventory.add_resource(new_resource, random.randint(20,60))
 
         self.model.inventory.print()
 
-        creatables = model.CreatableFactory()
-        creatables.load()
-        for creatable in creatables.creatables.values():
+        for creatable_name in self.model.creatables.names:
+            creatable = self.model.creatables.get_creatable_copy(creatable_name)
             ok = self.model.inventory.is_creatable(creatable)
             print("{0}: creatable = {1}".format(creatable.name, ok))
             self.model.add_creation(creatable)

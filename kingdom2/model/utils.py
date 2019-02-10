@@ -31,3 +31,13 @@ class EventQueue():
     def print(self):
         for event in self.events:
             print(event)
+
+def is_numeric(s):
+    try:
+        x = int(s)
+    except:
+        try:
+            x = float(s)
+        except:
+            x = None
+    return x

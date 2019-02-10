@@ -1,0 +1,15 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Example user template template
+### Example user template
+
+# IntelliJ project files
+.idea
+*.iml
+out
+gen
+.gitignore
+.idea/
+kingdom2/__pycache__/
+kingdom2/controller/__pycache__/
+kingdom2/model/__pycache__/
+kingdom2/view/__pycache__/

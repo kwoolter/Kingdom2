@@ -1,9 +1,11 @@
 import logging
 from .utils import Event
 from .utils import EventQueue
+from .utils import is_numeric
 import csv
 import copy
 import random
+from xml.dom.minidom import *
 
 
 class Resource:
@@ -45,7 +47,14 @@ class Creatable():
 
     @property
     def percent_complete(self):
-        return int(min(100, self.ticks_done * 100 / self.ticks_required))
+        try:
+            percent_complete = int(min(100, self.ticks_done * 100 / self.ticks_required))
+        except Exception as err:
+            print("{0}/{1}".format(self.ticks_done,self.ticks_required))
+            print(str(err))
+            percent_complete = 0
+
+        return percent_complete
 
     def add_pre_requisite(self, new_resource : Resource, item_count : int = 1):
 
@@ -92,10 +101,14 @@ class Inventory():
         is_creatable = True
 
         for pre_req, count in new_creatable.pre_requisites.items():
-            inv_count = self.resources[pre_req]
-            if count > inv_count:
+            if pre_req not in self.resources.keys():
                 is_creatable = False
                 break
+            else:
+                inv_count = self.resources[pre_req]
+                if count > inv_count:
+                    is_creatable = False
+                    break
 
         return is_creatable
 
@@ -127,10 +140,10 @@ class ResourceFactory:
         return resource
 
     @staticmethod
-    def get_resource_copy(self, name : str):
+    def get_resource_copy(name : str):
         resource = None
 
-        if name in self.resources.keys():
+        if name in ResourceFactory.resources.keys():
             resource = copy.deepcopy(ResourceFactory.resources[name])
 
         return resource
@@ -182,3 +195,122 @@ class CreatableFactory():
                 self.creatables[creatable] =  new_creatable
 
             print(str(new_creatable))
+
+    # From a specified node get the data value
+    def xml_get_node_text(node, tag_name: str):
+
+        tag = node.getElementsByTagName(tag_name)
+
+        # If the tag exists then get the data value
+        if len(tag) > 0:
+            value = tag[0].firstChild.data
+        # Else use None
+        else:
+            value = None
+
+        return value
+
+    def xml_get_node_value(self, tag_name : str):
+
+        value = self.xml_get_node_text(tag_name)
+
+        return is_numeric(value)
+
+
+class CreatableFactoryXML(object):
+    '''
+    Load some creatables from an XML file and store them in a dictionary
+    '''
+
+    def __init__(self, file_name : str):
+
+        self.file_name = file_name
+        self._dom = None
+        self._creatables = {}
+
+    @property
+    def count(self):
+        return len(self._creatables)
+
+    @property
+    def names(self):
+        return list(self._creatables.keys())
+
+    # Load in the quest contained in the quest file
+    def load(self):
+
+        self._dom = parse(self.file_name)
+
+        assert self._dom.documentElement.tagName == "creatables"
+
+        logging.info("%s.load(): Loading in %s", __class__, self.file_name)
+
+        # Get a list of all quests
+        creatables = self._dom.getElementsByTagName("creatable")
+
+        # for each quest...
+        for creatable in creatables:
+
+            # Get the main tags that describe the quest
+            name = self.xml_get_node_text(creatable, "name")
+            desc = self.xml_get_node_text(creatable, "description")
+            ticks_required = self.xml_get_node_value(creatable, "ticks_required")
+
+            # ...and create a basic creatable object
+            new_creatable = Creatable(name=name, description=desc, ticks_required=ticks_required)
+
+            logging.info("%s.load(): Loading Creatable '%s'...", __class__, new_creatable.name)
+
+            # Next get a list of all of the pre-requisites
+            pre_requisites = creatable.getElementsByTagName("pre_requisites")
+
+            # For each pre-requisite resource...
+            for resource in pre_requisites:
+
+                # Get the basic details of the resource
+                name = self.xml_get_node_text(resource, "name")
+                count = self.xml_get_node_value(resource, "count")
+
+                new_resource = ResourceFactory.get_resource_copy(name)
+                new_creatable.add_pre_requisite(new_resource, count)
+
+
+            logging.info("{0}.load(): Creatable '{1}' loaded".format(__class__, new_creatable.name))
+
+            # Add the new creatable to the dictionary
+            self._creatables[new_creatable.name] = new_creatable
+
+        self._dom.unlink()
+
+    # From a specified node get the data value
+    def xml_get_node_text(self, node, tag_name: str):
+
+        tag = node.getElementsByTagName(tag_name)
+
+        # If the tag exists then get the data value
+        if len(tag) > 0:
+            value = tag[0].firstChild.data
+        # Else use None
+        else:
+            value = None
+
+        return value
+
+    def xml_get_node_value(self, node, tag_name: str):
+
+        value = self.xml_get_node_text(node, tag_name)
+
+        return is_numeric(value)
+
+    def print(self):
+        for creatable in self._creatables.values():
+            print(creatable)
+
+
+    def get_creatable(self, name : str):
+
+        return self._creatables[name]
+
+    def get_creatable_copy(self, name : str):
+        return copy.deepcopy(self._creatables[name])
+

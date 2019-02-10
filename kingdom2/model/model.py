@@ -5,6 +5,7 @@ from .building_blocks import Resource
 from .building_blocks import Inventory
 from .building_blocks import Creatable
 from .building_blocks import ResourceFactory
+from .building_blocks import CreatableFactoryXML
 
 class Game:
 
@@ -25,6 +26,7 @@ class Game:
         self._tick_count = 0
         self.inventory = None
         self.resources = None
+        self.creatables = None
         self.creations = None
 
 
@@ -50,6 +52,9 @@ class Game:
         self.inventory = Inventory()
         self.resources = ResourceFactory()
         self.resources.load()
+        self.creatables = CreatableFactoryXML(".\\model\\data\\creatables.xml")
+        self.creatables.load()
+        #self.creatables.print()
 
         self.creations = []
 
@@ -64,7 +69,8 @@ class Game:
                                     Game.EVENT_TICK))
 
         for creation in self.creations:
-            creation.tick()
+            if self.inventory.is_creatable(creation):
+                creation.tick()
 
     def do_game_over(self):
 

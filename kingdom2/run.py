@@ -3,7 +3,7 @@ import logging
 
 def main():
 
-    logging.basicConfig(level = logging.ERROR)
+    logging.basicConfig(level = logging.INFO)
 
     c = controller.GameCLI()
     c.run()
