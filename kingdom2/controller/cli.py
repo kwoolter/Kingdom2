@@ -63,6 +63,10 @@ class GameCLI(cmd.Cmd):
         inv_view = view.InventoryTextView(self.model.inventory)
         inv_view.draw()
 
+    def do_map(self, arg):
+        map_view = view.WorldMapTextView(self.model.map)
+        map_view.draw()
+
     def do_test(self, arg):
 
         resource_types = model.ResourceFactory.get_resource_types()
@@ -78,7 +82,6 @@ class GameCLI(cmd.Cmd):
             ok = self.model.inventory.is_creatable(creatable)
             print("{0}: creatable = {1}".format(creatable.name, ok))
             self.model.add_creation(creatable)
-
 
     def print_events(self):
 

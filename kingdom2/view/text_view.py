@@ -1,5 +1,7 @@
-import kingdom2.model as model
 import logging
+
+import kingdom2.model as model
+
 
 class View():
 
@@ -18,10 +20,10 @@ class View():
     def draw(self):
         pass
 
+
 class TextView(View):
 
-    def __init__(self, model : model.Game):
-
+    def __init__(self, model: model.Game):
         super(TextView, self).__init__()
 
         self.model = model
@@ -38,7 +40,7 @@ class TextView(View):
 
 class InventoryTextView(View):
 
-    def __init__(self, model : model.Inventory):
+    def __init__(self, model: model.Inventory):
 
         super(InventoryTextView, self).__init__()
 
@@ -53,7 +55,7 @@ class InventoryTextView(View):
 
 class CreationsTextView(View):
 
-    def __init__(self, model : list):
+    def __init__(self, model: list):
 
         super(CreationsTextView, self).__init__()
 
@@ -67,3 +69,25 @@ class CreationsTextView(View):
 
         else:
             print("No creations to print!")
+
+
+class WorldMapTextView(View):
+
+    def __init__(self, model: model.WorldMap):
+        self.model = model
+
+    def draw(self):
+        print("+" + "-" * (self.model.width) + "+")
+        title = "{0:^" + str(self.model.width) + "}"
+        print("+" + title.format(self.model.name) + "+")
+        print("+" + "-" * (self.model.width) + "+")
+        for y in range(0, self.model.height):
+            row = "|"
+            for x in range(0, self.model.width):
+                c = self.model.get(x, y)
+                if c is not None:
+                    row += c
+                else:
+                    row += " "
+            print(row + "|")
+        print("+" + "-" * (self.model.width) + "+")

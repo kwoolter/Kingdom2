@@ -2,6 +2,7 @@
     <creatable id="Small Wooden House">
         <name>Small Wooden House</name>
         <description>A small wooden house</description>
+        <graphic>w</graphic>
         <ticks_required>5</ticks_required>
         <pre_requisites>
             <resource>
@@ -27,6 +28,7 @@
     <creatable id="Medium Wooden House">
         <name>Medium Wooden House</name>
         <description>A medium-sized wooden house</description>
+        <graphic>W</graphic>
         <ticks_required>10</ticks_required>
         <pre_requisites>
             <resource>
@@ -52,6 +54,7 @@
     <creatable id="Large Wooden House">
         <name>Large Wooden House</name>
         <description>A large wooden house</description>
+        <graphic>L</graphic>
         <ticks_required>15</ticks_required>
         <pre_requisites>
             <resource>
@@ -73,10 +76,35 @@
                 <count>10</count>
             </resource>
         </outputs>
+            <creatable id="Bricks">
+        <name>Some Bricks</name>
+        <description>Some bricks</description>
+        <ticks_required>5</ticks_required>
+        <pre_requisites>
+            <resource>
+                <name>Mud</name>
+                <count>5</count>
+            </resource>
+            <resource>
+                <name>Straw</name>
+                <count>5</count>
+            </resource>
+        </pre_requisites>
+        <outputs>
+            <resource>
+                <name>Bricks</name>
+                <count>10</count>
+            </resource>
+            <resource>
+                <name>XP</name>
+                <count>10</count>
+            </resource>
+        </outputs>
+    </creatable>
     </creatable>
         <creatable id="Small Brick House">
         <name>Small Brick House</name>
-        <description>A small birck wooden house</description>
+        <description>A small brick wooden house</description>
         <ticks_required>15</ticks_required>
         <pre_requisites>
             <resource>

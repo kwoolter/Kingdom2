@@ -6,6 +6,7 @@ from .building_blocks import Inventory
 from .building_blocks import Creatable
 from .building_blocks import ResourceFactory
 from .building_blocks import CreatableFactoryXML
+from .building_blocks import WorldMap
 
 class Game:
 
@@ -28,6 +29,7 @@ class Game:
         self.resources = None
         self.creatables = None
         self.creations = None
+        self.map = None
 
 
     @property
@@ -52,9 +54,11 @@ class Game:
         self.inventory = Inventory()
         self.resources = ResourceFactory()
         self.resources.load()
-        self.creatables = CreatableFactoryXML(".\\model\\data\\creatables.xml")
+        self.creatables = CreatableFactoryXML(".\\kingdom2\\model\\data\\creatables.xml")
         self.creatables.load()
         #self.creatables.print()
+        self.map = WorldMap("Kingdom2", 50,50)
+        self.map.initialise()
 
         self.creations = []
 

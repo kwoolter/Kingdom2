@@ -12,13 +12,14 @@ class Resource:
 
     CATEGORY_DEFAULT = "default"
 
-    def __init__(self, name : str, description : str, category : str = CATEGORY_DEFAULT):
+    def __init__(self, name : str, description : str, category : str = CATEGORY_DEFAULT, graphic : str = None):
         self.name = name
         self.description = description
         self.category = category
+        self.graphic = graphic
 
     def __str__(self):
-        _str = "{0}: {1} ({2})".format(self.name, self.description, self.category)
+        _str = "{0} ({3}): {1} ({2})".format(self.name, self.description, self.category, self.graphic)
         return _str
 
 class Creatable():
@@ -36,8 +37,14 @@ class Creatable():
         _str = "{0} ({1}) {2}% complete".format(self.name, self.description, self.percent_complete)
 
         if len(self.pre_requisites.keys()) > 0:
+            _str += "\n\tPre-requisites:"
             for k,v in self.pre_requisites.items():
-                _str += "\n\t{0}:{1}".format(k, v)
+                _str += "\n\t\t- {0}:{1}".format(k, v)
+
+        if len(self.output.keys()) > 0:
+            _str += "\n\tOutputs:"
+            for k,v in self.output.items():
+                _str += "\n\t\t- {0}:{1}".format(k, v)
 
         return _str
 
@@ -63,12 +70,12 @@ class Creatable():
 
         self.pre_requisites[new_resource_name] += item_count
 
-    def add_output(self, new_resource : Resource, item_count : int = 1):
+    def add_output(self, new_resource_name : str, item_count : int = 1):
 
-        if new_resource not in self.output.keys():
-            self.output[new_resource] = 0
+        if new_resource_name not in self.output.keys():
+            self.output[new_resource_name] = 0
 
-        self.output[new_resource] += item_count
+        self.output[new_resource_name] += item_count
 
     def tick(self):
         if self.is_complete is False:
@@ -160,7 +167,7 @@ class ResourceFactory:
         print("\nLoading resources...")
 
         # Attempt to open the file
-        with open(".\\model\\data\\resources.csv", 'r') as object_file:
+        with open(".\\kingdom2\\model\\data\\resources.csv", 'r') as object_file:
 
             # Load all rows in as a dictionary
             reader = csv.DictReader(object_file)
@@ -170,7 +177,11 @@ class ResourceFactory:
                 name = row.get("Name")
                 description = row.get("Description")
                 category = row.get("Category")
-                new_resource = Resource(name, description, category)
+                graphic = row.get("Graphic")
+                if graphic == "":
+                    graphic = None
+
+                new_resource = Resource(name, description, category, graphic)
                 ResourceFactory.resources[new_resource.name] = new_resource
 
                 print(str(new_resource))
@@ -179,43 +190,6 @@ class ResourceFactory:
             object_file.close()
 
         print("\n{0} resources loaded.".format(len(self.resources.keys())))
-
-class CreatableFactory():
-
-    def __init__(self):
-        self.creatables = {}
-
-    def load(self):
-        resource_types = ResourceFactory.get_resource_types()
-        creatables = ("house", "field", "pie")
-        for creatable in creatables:
-            new_creatable = Creatable(creatable, creatable)
-            for resource_type in resource_types:
-                new_resource = ResourceFactory.get_resource(resource_type)
-                new_creatable.add_pre_requisite(new_resource, random.randint(1,3))
-                self.creatables[creatable] =  new_creatable
-
-            print(str(new_creatable))
-
-    # From a specified node get the data value
-    def xml_get_node_text(node, tag_name: str):
-
-        tag = node.getElementsByTagName(tag_name)
-
-        # If the tag exists then get the data value
-        if len(tag) > 0:
-            value = tag[0].firstChild.data
-        # Else use None
-        else:
-            value = None
-
-        return value
-
-    def xml_get_node_value(self, tag_name : str):
-
-        value = self.xml_get_node_text(tag_name)
-
-        return is_numeric(value)
 
 
 class CreatableFactoryXML(object):
@@ -275,7 +249,27 @@ class CreatableFactoryXML(object):
 
                 new_creatable.add_pre_requisite(name, count)
 
-                logging.info("{0}.load(): adding pre-req {1} ({2})".format(__class__, new_creatable.name, count))
+                logging.info("{0}.load(): adding pre-req {1} ({2})".format(__class__, name, count))
+
+            # Next get a list of all of the outputs
+            pre_requisites = creatable.getElementsByTagName("outputs")[0]
+            resources = pre_requisites.getElementsByTagName("resource")
+
+            # For each output resource...
+            for resource in resources:
+
+                # Get the basic details of the resource
+                name = self.xml_get_node_text(resource, "name")
+                count = self.xml_get_node_value(resource, "count")
+                action = self.xml_get_node_text(resource, "action")
+                if action is not None:
+                    action = "replace"
+                else:
+                    action = "inventory"
+
+                new_creatable.add_output(name, count)
+
+                logging.info("{0}.load(): adding output {1} ({2})".format(__class__, name, count))
 
             logging.info("{0}.load(): Creatable '{1}' loaded".format(__class__, new_creatable.name))
             print(str(new_creatable))
@@ -318,3 +312,63 @@ class CreatableFactoryXML(object):
     def get_creatable_copy(self, name : str):
         return copy.deepcopy(self._creatables[name])
 
+
+class WorldMap:
+
+    TILE_GRASS = "Grass"
+
+    def __init__(self, name : str, width : int = 50, height : int = 50):
+        self.name = name
+        self._width = width
+        self._height = height
+        self.map = []
+
+    def initialise(self):
+        # Clear the map squares
+        self.map = [[None for y in range(0, self._height)] for x in range(0, self._width)]
+
+        grass = ResourceFactory.get_resource_copy(WorldMap.TILE_GRASS)
+        self.add_objects(grass.graphic, 40)
+
+    @property
+    def width(self):
+        return len(self.map)
+
+    @property
+    def height(self):
+        return len(self.map[0])
+
+    # Are the specified coordinates within the area of the map?
+    def is_valid_xy(self, x: int, y: int):
+
+        result = False
+
+        if x >= 0 and x < self.width and y >= 0 and y < self.height:
+            result = True
+
+        return result
+
+    # Get a map square at the specified co-ordinates
+    def get(self, x: int, y: int):
+
+        if self.is_valid_xy(x, y) is False:
+            raise Exception("Trying to get tile at ({0},{1}) which is outside of the world!".format(x, y))
+
+        return self.map[x][y]
+
+    # Set a map square at the specified co-ordinates with the specified object
+    def set(self, x: int, y: int, c):
+
+        if self.is_valid_xy(x, y) is False:
+            raise Exception("Trying to set tile at ({0},{1}) which is outside of the world!".format(x, y))
+
+        self.map[x][y] = c
+
+    # Add objects to random tiles
+    def add_objects(self, object_type, count: int = 20):
+
+        for i in range(0, count):
+            x = random.randint(0, self.width - 1)
+            y = random.randint(0, self.height - 1)
+            if self.get(x, y) is None:
+                self.set(x, y, object_type)
