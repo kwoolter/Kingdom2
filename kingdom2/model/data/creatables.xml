@@ -76,7 +76,8 @@
                 <count>10</count>
             </resource>
         </outputs>
-            <creatable id="Bricks">
+    </creatable>
+    <creatable id="Bricks">
         <name>Some Bricks</name>
         <description>Some bricks</description>
         <ticks_required>5</ticks_required>
@@ -101,8 +102,7 @@
             </resource>
         </outputs>
     </creatable>
-    </creatable>
-        <creatable id="Small Brick House">
+    <creatable id="Small Brick House">
         <name>Small Brick House</name>
         <description>A small brick wooden house</description>
         <ticks_required>15</ticks_required>

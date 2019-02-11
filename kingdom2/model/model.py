@@ -1,4 +1,5 @@
 import logging
+import os
 from .utils import Event
 from .utils import EventQueue
 from .building_blocks import Resource
@@ -18,6 +19,8 @@ class Game:
     # Events
     EVENT_TICK = "tick"
     EVENT_STATE = "state"
+
+    GAME_DATA_DIR = os.path.dirname(__file__) + "\\data\\"
 
     def __init__(self, name : str):
 
@@ -52,12 +55,13 @@ class Game:
         self.state = Game.STATE_PLAYING
 
         self.inventory = Inventory()
-        self.resources = ResourceFactory()
+        self.resources = ResourceFactory(Game.GAME_DATA_DIR + "resources.csv")
         self.resources.load()
-        self.creatables = CreatableFactoryXML(".\\kingdom2\\model\\data\\creatables.xml")
+
+        self.creatables = CreatableFactoryXML(Game.GAME_DATA_DIR + "creatables.xml")
         self.creatables.load()
-        #self.creatables.print()
-        self.map = WorldMap("Kingdom2", 50,50)
+
+        self.map = WorldMap("Kingdom 2", 30,30)
         self.map.initialise()
 
         self.creations = []

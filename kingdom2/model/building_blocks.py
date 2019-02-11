@@ -135,8 +135,10 @@ class ResourceFactory:
 
     resources = {}
 
-    def __init__(self):
-        pass
+    def __init__(self, file_name : str):
+
+        self.file_name = file_name
+
 
     @staticmethod
     def get_resource(name : str):
@@ -167,7 +169,7 @@ class ResourceFactory:
         print("\nLoading resources...")
 
         # Attempt to open the file
-        with open(".\\kingdom2\\model\\data\\resources.csv", 'r') as object_file:
+        with open(self.file_name, 'r') as object_file:
 
             # Load all rows in as a dictionary
             reader = csv.DictReader(object_file)
@@ -316,6 +318,7 @@ class CreatableFactoryXML(object):
 class WorldMap:
 
     TILE_GRASS = "Grass"
+    TILE_SEA = "Sea"
 
     def __init__(self, name : str, width : int = 50, height : int = 50):
         self.name = name
@@ -328,6 +331,9 @@ class WorldMap:
         self.map = [[None for y in range(0, self._height)] for x in range(0, self._width)]
 
         grass = ResourceFactory.get_resource_copy(WorldMap.TILE_GRASS)
+        self.add_objects(grass.graphic, 40)
+
+        grass = ResourceFactory.get_resource_copy(WorldMap.TILE_SEA)
         self.add_objects(grass.graphic, 40)
 
     @property

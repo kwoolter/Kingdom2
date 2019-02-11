@@ -1,4 +1,6 @@
 import logging
+import colorama
+import sys
 
 import kingdom2.model as model
 
@@ -73,21 +75,38 @@ class CreationsTextView(View):
 
 class WorldMapTextView(View):
 
+    COLOURS_DEFAULT = colorama.Fore.RESET + colorama.Back.RESET
+    COLOURS_TITLE = colorama.Fore.BLACK + colorama.Back.YELLOW
+
+
     def __init__(self, model: model.WorldMap):
         self.model = model
 
+        if sys.stdout.isatty() is False:
+            colorama.init(convert=False, strip=False)
+        else:
+            colorama.init(convert=True)
+
     def draw(self):
-        print("+" + "-" * (self.model.width) + "+")
+
+        print(WorldMapTextView.COLOURS_TITLE, end="")
+        print("+" + "-" * (self.model.width) + "+" + WorldMapTextView.COLOURS_DEFAULT)
         title = "{0:^" + str(self.model.width) + "}"
-        print("+" + title.format(self.model.name) + "+")
-        print("+" + "-" * (self.model.width) + "+")
+        print(WorldMapTextView.COLOURS_TITLE, end="")
+        print("|" + title.format(self.model.name) + "|" + WorldMapTextView.COLOURS_DEFAULT)
+        print(WorldMapTextView.COLOURS_TITLE, end="")
+        print("+" + "-" * (self.model.width) + "+"  + WorldMapTextView.COLOURS_DEFAULT)
+
         for y in range(0, self.model.height):
-            row = "|"
+            print(WorldMapTextView.COLOURS_TITLE + "|" + WorldMapTextView.COLOURS_DEFAULT, end="")
+            row = ""
             for x in range(0, self.model.width):
                 c = self.model.get(x, y)
                 if c is not None:
                     row += c
                 else:
                     row += " "
-            print(row + "|")
-        print("+" + "-" * (self.model.width) + "+")
+            print(row + WorldMapTextView.COLOURS_TITLE + "|" + WorldMapTextView.COLOURS_DEFAULT)
+
+        print(WorldMapTextView.COLOURS_TITLE, end="")
+        print("+" + "-" * (self.model.width) + "+" + WorldMapTextView.COLOURS_DEFAULT)
