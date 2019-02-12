@@ -77,9 +77,11 @@ class WorldMapTextView(View):
 
     COLOURS_DEFAULT = colorama.Fore.RESET + colorama.Back.RESET
     COLOURS_TITLE = colorama.Fore.BLACK + colorama.Back.YELLOW
-
+    COLOURS_EMPTY_TILE = colorama.Fore.GREEN + colorama.Back.GREEN
+    COLOURS_NON_EMPTY_TILE = colorama.Fore.BLACK + colorama.Back.GREEN
 
     def __init__(self, model: model.WorldMap):
+
         self.model = model
 
         if sys.stdout.isatty() is False:
@@ -103,10 +105,37 @@ class WorldMapTextView(View):
             for x in range(0, self.model.width):
                 c = self.model.get(x, y)
                 if c is not None:
-                    row += c
+                    row += WorldMapTextView.COLOURS_NON_EMPTY_TILE + c + WorldMapTextView.COLOURS_DEFAULT
                 else:
-                    row += " "
+                    row += WorldMapTextView.COLOURS_EMPTY_TILE + " " + WorldMapTextView.COLOURS_DEFAULT
+
             print(row + WorldMapTextView.COLOURS_TITLE + "|" + WorldMapTextView.COLOURS_DEFAULT)
 
         print(WorldMapTextView.COLOURS_TITLE, end="")
         print("+" + "-" * (self.model.width) + "+" + WorldMapTextView.COLOURS_DEFAULT)
+
+
+class WorldTopoModelTextView(View):
+
+    def __init__(self, model: model.WorldMap):
+
+        self.model = model.topo_model_pass2
+
+
+    def draw(self):
+
+        width = len(self.model)
+        height = len(self.model[0])
+
+        for x in range(0, width):
+            print(",{0}".format(x), end="")
+        print("")
+
+        for y in range(0, height):
+            row = "{0},".format(y)
+            for x in range(0, width):
+                a = self.model[x][y]
+                row += "{0:.4},".format(a)
+
+            print(row)
+

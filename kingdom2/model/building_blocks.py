@@ -5,6 +5,7 @@ from .utils import is_numeric
 import csv
 import copy
 import random
+
 from xml.dom.minidom import *
 
 
@@ -325,8 +326,14 @@ class WorldMap:
         self._width = width
         self._height = height
         self.map = []
+        self.topo_model_pass2 = []
+
 
     def initialise(self):
+
+        # Generate a topology model for the map
+        self.generate_topology()
+
         # Clear the map squares
         self.map = [[None for y in range(0, self._height)] for x in range(0, self._width)]
 
@@ -335,6 +342,90 @@ class WorldMap:
 
         grass = ResourceFactory.get_resource_copy(WorldMap.TILE_SEA)
         self.add_objects(grass.graphic, 40)
+
+    def generate_topology(self):
+
+        # Topo controls
+        MAX_ALTITUDE = 10.0
+        MIN_ALTITUDE_CLIP = 0.01
+        ALTITUDE_OFFSET = 0.0
+        MIN_ALTITUDE = MAX_ALTITUDE * -1.0
+        MIN_ALTITUDE = 0
+        MAX_SLOPE = MAX_ALTITUDE * 0.1
+        MIN_SLOPE = MAX_SLOPE * -1.0
+        MAX_SLOPE_DELTA = MAX_SLOPE * 2.0
+
+        # Clear the topo model
+        topo_model_pass1 = [[None for y in range(0, self._height)] for x in range(0, self._width)]
+        self.topo_model_pass2  = [[None for y in range(0, self._height)] for x in range(0, self._width)]
+
+        print("Pass 1: altitudes and slopes...")
+
+        # Set the first square
+        topo_model_pass1[0][0] = (random.random(), 0, 0)
+
+        for y in range(0, self._height):
+            for x in range(0, self._width):
+                if y == 0:
+                    north_slope = random.uniform(MIN_SLOPE, MAX_SLOPE)
+                    north_altitude = random.uniform(MIN_ALTITUDE, MAX_ALTITUDE)
+                    #north_altitude = 0
+                else:
+                    north_altitude, tmp, north_slope = topo_model_pass1[x][y - 1]
+
+                if x == 0:
+                    west_slope = random.uniform(MIN_SLOPE, MAX_SLOPE)
+                    west_altitude = random.uniform(MIN_ALTITUDE, MAX_ALTITUDE)
+                    #west_altitude = 0
+                else:
+                    west_altitude, west_slope, tmp = topo_model_pass1[x - 1][y]
+
+                clip = lambda n, minn, maxn: max(min(maxn, n), minn)
+
+                altitude = ((north_altitude + north_slope) + (west_altitude + west_slope))/2
+                altitude = clip(altitude, MIN_ALTITUDE, MAX_ALTITUDE)
+
+                east_slope = west_slope + ((random.random() * MAX_SLOPE_DELTA) - MAX_SLOPE_DELTA/2)
+                east_slope = clip(east_slope, MIN_SLOPE, MAX_SLOPE)
+
+                south_slope = north_slope + ((random.random() * MAX_SLOPE_DELTA) - MAX_SLOPE_DELTA / 2)
+                south_slope = clip(south_slope, MIN_SLOPE, MAX_SLOPE)
+
+                topo_model_pass1[x][y] = (altitude, east_slope, south_slope)
+
+        print("Pass 2: averaging out using neighbouring points...")
+
+        # Perform second pass averaging based on adjacent altitudes
+        vectors = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (1,-1), (-1,1))
+        total_altitude = 0
+        for y in range(0, self._height):
+            for x in range(0, self._width):
+
+                local_altitude_total, es, ss = topo_model_pass1[x][y]
+                local_altitude_points = 1
+
+                for dx,dy in vectors:
+                    if x+dx < 0 or x+dx >= self._width or y+dy < 0 or y+dy >= self._height:
+                        pass
+                    else:
+                        local_altitude, es, ss = topo_model_pass1[x+dx][y+dy]
+                        local_altitude_total += local_altitude
+                        local_altitude_points += 1
+
+                average_altitude = (local_altitude_total/local_altitude_points)
+                total_altitude += average_altitude
+                self.topo_model_pass2[x][y] = average_altitude
+
+        overall_average_altitude = total_altitude/(self._height * self._width)
+
+        print("Pass 3: applying altitude floor of {0:.3}...".format(overall_average_altitude * MIN_ALTITUDE_CLIP))
+
+        # Perform 3rd pass clipping
+        for y in range(0, self._height):
+            for x in range(0, self._width):
+                altitude = self.topo_model_pass2[x][y]
+                self.topo_model_pass2[x][y] = max(altitude, overall_average_altitude * MIN_ALTITUDE_CLIP) + ALTITUDE_OFFSET
+
 
     @property
     def width(self):
@@ -378,3 +469,9 @@ class WorldMap:
             y = random.randint(0, self.height - 1)
             if self.get(x, y) is None:
                 self.set(x, y, object_type)
+
+class MapSquare:
+
+    def __init__(self, content : str, altitude : float = 0.0):
+        self.content = content
+        self.altitude = altitude

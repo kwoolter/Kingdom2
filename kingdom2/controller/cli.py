@@ -67,6 +67,10 @@ class GameCLI(cmd.Cmd):
         map_view = view.WorldMapTextView(self.model.map)
         map_view.draw()
 
+    def do_topo(self, arg):
+        map_view = view.WorldTopoModelTextView(self.model.map)
+        map_view.draw()
+
     def do_test(self, arg):
 
         resource_types = model.ResourceFactory.get_resource_types()
