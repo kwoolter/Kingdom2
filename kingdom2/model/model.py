@@ -52,6 +52,7 @@ class Game:
         return self.name
 
     def start(self):
+
         self.state = Game.STATE_PLAYING
 
         self.inventory = Inventory()

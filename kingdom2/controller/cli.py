@@ -66,10 +66,12 @@ class GameCLI(cmd.Cmd):
     def do_map(self, arg):
         map_view = view.WorldMapTextView(self.model.map)
         map_view.draw()
+        #map_view.draw((5,5,10,10))
 
     def do_topo(self, arg):
         map_view = view.WorldTopoModelTextView(self.model.map)
         map_view.draw()
+        #map_view.draw((5,5,10,10))
 
     def do_test(self, arg):
 

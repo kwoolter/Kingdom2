@@ -1,20 +1,18 @@
-import logging
-from .utils import Event
-from .utils import EventQueue
-from .utils import is_numeric
-import csv
 import copy
+import csv
+import logging
 import random
+from xml.dom.minidom import *
+
 import numpy
 
-from xml.dom.minidom import *
+from .utils import is_numeric
 
 
 class Resource:
-
     CATEGORY_DEFAULT = "default"
 
-    def __init__(self, name : str, description : str, category : str = CATEGORY_DEFAULT, graphic : str = None):
+    def __init__(self, name: str, description: str, category: str = CATEGORY_DEFAULT, graphic: str = None):
         self.name = name
         self.description = description
         self.category = category
@@ -24,9 +22,10 @@ class Resource:
         _str = "{0} ({3}): {1} ({2})".format(self.name, self.description, self.category, self.graphic)
         return _str
 
+
 class Creatable():
 
-    def __init__(self, name : str, description : str, ticks_required : int = 10):
+    def __init__(self, name: str, description: str, ticks_required: int = 10):
         self.name = name
         self.description = description
         self.pre_requisites = {}
@@ -40,12 +39,12 @@ class Creatable():
 
         if len(self.pre_requisites.keys()) > 0:
             _str += "\n\tPre-requisites:"
-            for k,v in self.pre_requisites.items():
+            for k, v in self.pre_requisites.items():
                 _str += "\n\t\t- {0}:{1}".format(k, v)
 
         if len(self.output.keys()) > 0:
             _str += "\n\tOutputs:"
-            for k,v in self.output.items():
+            for k, v in self.output.items():
                 _str += "\n\t\t- {0}:{1}".format(k, v)
 
         return _str
@@ -59,20 +58,20 @@ class Creatable():
         try:
             percent_complete = int(min(100, self.ticks_done * 100 / self.ticks_required))
         except Exception as err:
-            print("{0}/{1}".format(self.ticks_done,self.ticks_required))
+            print("{0}/{1}".format(self.ticks_done, self.ticks_required))
             print(str(err))
             percent_complete = 0
 
         return percent_complete
 
-    def add_pre_requisite(self, new_resource_name : str, item_count : int = 1):
+    def add_pre_requisite(self, new_resource_name: str, item_count: int = 1):
 
         if new_resource_name not in self.pre_requisites.keys():
             self.pre_requisites[new_resource_name] = 0
 
         self.pre_requisites[new_resource_name] += item_count
 
-    def add_output(self, new_resource_name : str, item_count : int = 1):
+    def add_output(self, new_resource_name: str, item_count: int = 1):
 
         if new_resource_name not in self.output.keys():
             self.output[new_resource_name] = 0
@@ -88,6 +87,7 @@ class Creatable():
     def do_complete(self):
         print("Construction complete for {0}!".format(self.name))
 
+
 class Inventory():
 
     def __init__(self):
@@ -98,14 +98,14 @@ class Inventory():
     def resource_type_count(self):
         return len(self.resources.keys())
 
-    def add_resource(self, new_resource : Resource, item_count : int = 1):
+    def add_resource(self, new_resource: Resource, item_count: int = 1):
 
         if new_resource not in self.resources.keys():
             self.resources[new_resource] = 0
 
         self.resources[new_resource] += item_count
 
-    def is_creatable(self, new_creatable : Creatable):
+    def is_creatable(self, new_creatable: Creatable):
 
         is_creatable = True
 
@@ -134,16 +134,14 @@ class Inventory():
 
 
 class ResourceFactory:
-
     resources = {}
 
-    def __init__(self, file_name : str):
+    def __init__(self, file_name: str):
 
         self.file_name = file_name
 
-
     @staticmethod
-    def get_resource(name : str):
+    def get_resource(name: str):
         resource = None
 
         if name in ResourceFactory.resources.keys():
@@ -152,7 +150,7 @@ class ResourceFactory:
         return resource
 
     @staticmethod
-    def get_resource_copy(name : str):
+    def get_resource_copy(name: str):
         resource = None
 
         if name in ResourceFactory.resources.keys():
@@ -164,7 +162,6 @@ class ResourceFactory:
     def get_resource_types():
 
         return list(ResourceFactory.resources.keys())
-
 
     def load(self):
 
@@ -201,7 +198,7 @@ class CreatableFactoryXML(object):
     Load some creatables from an XML file and store them in a dictionary
     '''
 
-    def __init__(self, file_name : str):
+    def __init__(self, file_name: str):
 
         self.file_name = file_name
         self._dom = None
@@ -246,7 +243,6 @@ class CreatableFactoryXML(object):
 
             # For each pre-requisite resource...
             for resource in resources:
-
                 # Get the basic details of the resource
                 name = self.xml_get_node_text(resource, "name")
                 count = self.xml_get_node_value(resource, "count")
@@ -278,7 +274,6 @@ class CreatableFactoryXML(object):
             logging.info("{0}.load(): Creatable '{1}' loaded".format(__class__, new_creatable.name))
             print(str(new_creatable))
 
-
             # Add the new creatable to the dictionary
             self._creatables[new_creatable.name] = new_creatable
 
@@ -308,27 +303,24 @@ class CreatableFactoryXML(object):
         for creatable in self._creatables.values():
             print(creatable)
 
-
-    def get_creatable(self, name : str):
+    def get_creatable(self, name: str):
 
         return self._creatables[name]
 
-    def get_creatable_copy(self, name : str):
+    def get_creatable_copy(self, name: str):
         return copy.deepcopy(self._creatables[name])
 
 
 class WorldMap:
-
     TILE_GRASS = "Grass"
     TILE_SEA = "Sea"
 
-    def __init__(self, name : str, width : int = 50, height : int = 50):
+    def __init__(self, name: str, width: int = 50, height: int = 50):
         self.name = name
         self._width = width
         self._height = height
         self.map = []
         self.topo_model_pass2 = []
-
 
     def initialise(self):
 
@@ -357,7 +349,7 @@ class WorldMap:
 
         # Clear the topo model
         topo_model_pass1 = [[None for y in range(0, self._height)] for x in range(0, self._width)]
-        self.topo_model_pass2  = [[None for y in range(0, self._height)] for x in range(0, self._width)]
+        self.topo_model_pass2 = [[None for y in range(0, self._height)] for x in range(0, self._width)]
 
         # Create an initial topography using altitudes and random slope changes
         print("Pass 1: altitudes and slopes...")
@@ -372,23 +364,23 @@ class WorldMap:
                 if y == 0:
                     north_slope = random.uniform(MIN_SLOPE, MAX_SLOPE)
                     north_altitude = random.uniform(MIN_ALTITUDE, MAX_ALTITUDE)
-                    #north_altitude = 0
+                    # north_altitude = 0
                 else:
                     north_altitude, tmp, north_slope = topo_model_pass1[x][y - 1]
 
                 if x == 0:
                     west_slope = random.uniform(MIN_SLOPE, MAX_SLOPE)
                     west_altitude = random.uniform(MIN_ALTITUDE, MAX_ALTITUDE)
-                    #west_altitude = 0
+                    # west_altitude = 0
                 else:
                     west_altitude, west_slope, tmp = topo_model_pass1[x - 1][y]
 
                 clip = lambda n, minn, maxn: max(min(maxn, n), minn)
 
-                altitude = ((north_altitude + north_slope) + (west_altitude + west_slope))/2
+                altitude = ((north_altitude + north_slope) + (west_altitude + west_slope)) / 2
                 altitude = clip(altitude, MIN_ALTITUDE, MAX_ALTITUDE)
 
-                east_slope = west_slope + ((random.random() * MAX_SLOPE_DELTA) - MAX_SLOPE_DELTA/2)
+                east_slope = west_slope + ((random.random() * MAX_SLOPE_DELTA) - MAX_SLOPE_DELTA / 2)
                 east_slope = clip(east_slope, MIN_SLOPE, MAX_SLOPE)
 
                 south_slope = north_slope + ((random.random() * MAX_SLOPE_DELTA) - MAX_SLOPE_DELTA / 2)
@@ -400,7 +392,7 @@ class WorldMap:
 
         # Perform second pass averaging based on adjacent altitudes to smooth out topography
         # Define which neighboring points we are going to look at
-        vectors = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (1,-1), (-1,1))
+        vectors = ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1))
 
         # Iterate through each point in the map
         for y in range(0, self._height):
@@ -411,15 +403,15 @@ class WorldMap:
                 local_altitude_points = 1
 
                 # Get the heights of the surrounding points
-                for dx,dy in vectors:
-                    if x+dx < 0 or x+dx >= self._width or y+dy < 0 or y+dy >= self._height:
+                for dx, dy in vectors:
+                    if x + dx < 0 or x + dx >= self._width or y + dy < 0 or y + dy >= self._height:
                         pass
                     else:
-                        local_altitude, es, ss = topo_model_pass1[x+dx][y+dy]
+                        local_altitude, es, ss = topo_model_pass1[x + dx][y + dy]
                         local_altitude_total += local_altitude
                         local_altitude_points += 1
 
-                average_altitude = (local_altitude_total/local_altitude_points)
+                average_altitude = (local_altitude_total / local_altitude_points)
 
                 # Record the average altitude in a new array
                 self.topo_model_pass2[x][y] = average_altitude
@@ -433,7 +425,6 @@ class WorldMap:
         self.topo_model_pass2 = a.tolist()
 
         print("Pass 3: applying altitude floor of {0:.3}...".format(threshold))
-
 
     @property
     def width(self):
@@ -461,6 +452,13 @@ class WorldMap:
 
         return self.map[x][y]
 
+    def get_range(self, x: int, y: int, width: int, height: int):
+
+        a = numpy.array(self.topo_model_pass2, order="F")
+        b = a[x:x + width, y:y + height]
+
+        return b.tolist()
+
     # Set a map square at the specified co-ordinates with the specified object
     def set(self, x: int, y: int, c):
 
@@ -468,6 +466,9 @@ class WorldMap:
             raise Exception("Trying to set tile at ({0},{1}) which is outside of the world!".format(x, y))
 
         self.map[x][y] = c
+
+    def get_altitude(self, x: int, y: int):
+        return self.topo_model_pass2[x][y]
 
     # Add objects to random tiles
     def add_objects(self, object_type, count: int = 20):
@@ -478,8 +479,9 @@ class WorldMap:
             if self.get(x, y) is None:
                 self.set(x, y, object_type)
 
+
 class MapSquare:
 
-    def __init__(self, content : str, altitude : float = 0.0):
+    def __init__(self, content: str, altitude: float = 0.0):
         self.content = content
         self.altitude = altitude

@@ -1,6 +1,7 @@
 import logging
-import colorama
 import sys
+
+import colorama
 
 import kingdom2.model as model
 
@@ -74,7 +75,6 @@ class CreationsTextView(View):
 
 
 class WorldMapTextView(View):
-
     COLOURS_DEFAULT = colorama.Fore.RESET + colorama.Back.RESET
     COLOURS_TITLE = colorama.Fore.BLACK + colorama.Back.YELLOW
     COLOURS_EMPTY_TILE = colorama.Fore.GREEN + colorama.Back.GREEN
@@ -89,20 +89,28 @@ class WorldMapTextView(View):
         else:
             colorama.init(convert=True)
 
-    def draw(self):
+    def draw(self, rect: list = None):
+
+        if rect is not None:
+            ox, oy, width, height = rect
+        else:
+            ox = 0
+            oy = 0
+            width = self.model.width
+            height = self.model.height
 
         print(WorldMapTextView.COLOURS_TITLE, end="")
-        print("+" + "-" * (self.model.width) + "+" + WorldMapTextView.COLOURS_DEFAULT)
-        title = "{0:^" + str(self.model.width) + "}"
+        print("+" + "-" * width + "+" + WorldMapTextView.COLOURS_DEFAULT)
+        title = "{0:^" + str(width) + "}"
         print(WorldMapTextView.COLOURS_TITLE, end="")
         print("|" + title.format(self.model.name) + "|" + WorldMapTextView.COLOURS_DEFAULT)
         print(WorldMapTextView.COLOURS_TITLE, end="")
-        print("+" + "-" * (self.model.width) + "+"  + WorldMapTextView.COLOURS_DEFAULT)
+        print("+" + "-" * width + "+" + WorldMapTextView.COLOURS_DEFAULT)
 
-        for y in range(0, self.model.height):
+        for y in range(oy, oy + height):
             print(WorldMapTextView.COLOURS_TITLE + "|" + WorldMapTextView.COLOURS_DEFAULT, end="")
             row = ""
-            for x in range(0, self.model.width):
+            for x in range(ox, ox + width):
                 c = self.model.get(x, y)
                 if c is not None:
                     row += WorldMapTextView.COLOURS_NON_EMPTY_TILE + c + WorldMapTextView.COLOURS_DEFAULT
@@ -112,20 +120,24 @@ class WorldMapTextView(View):
             print(row + WorldMapTextView.COLOURS_TITLE + "|" + WorldMapTextView.COLOURS_DEFAULT)
 
         print(WorldMapTextView.COLOURS_TITLE, end="")
-        print("+" + "-" * (self.model.width) + "+" + WorldMapTextView.COLOURS_DEFAULT)
+        print("+" + "-" * width + "+" + WorldMapTextView.COLOURS_DEFAULT)
 
 
 class WorldTopoModelTextView(View):
 
     def __init__(self, model: model.WorldMap):
 
-        self.model = model.topo_model_pass2
+        self.model = model
 
+    def draw(self, rect: list = None):
 
-    def draw(self):
-
-        width = len(self.model)
-        height = len(self.model[0])
+        if rect is not None:
+            ox, oy, width, height = rect
+        else:
+            ox = 0
+            oy = 0
+            width = self.model.width
+            height = self.model.height
 
         for x in range(0, width):
             print(",{0}".format(x), end="")
@@ -134,8 +146,7 @@ class WorldTopoModelTextView(View):
         for y in range(0, height):
             row = "{0},".format(y)
             for x in range(0, width):
-                a = self.model[x][y]
+                a = self.model.topo_model_pass2[x][y]
                 row += "{0:.4},".format(a)
 
             print(row)
-
