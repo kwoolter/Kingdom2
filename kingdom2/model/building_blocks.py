@@ -5,6 +5,7 @@ from .utils import is_numeric
 import csv
 import copy
 import random
+import numpy
 
 from xml.dom.minidom import *
 
@@ -347,11 +348,10 @@ class WorldMap:
 
         # Topo controls
         MAX_ALTITUDE = 10.0
-        MIN_ALTITUDE_CLIP = 0.01
+        MIN_ALTITUDE_CLIP_FACTOR = -0.5
         ALTITUDE_OFFSET = 0.0
-        MIN_ALTITUDE = MAX_ALTITUDE * -1.0
-        MIN_ALTITUDE = 0
-        MAX_SLOPE = MAX_ALTITUDE * 0.1
+        MIN_ALTITUDE = 0.0
+        MAX_SLOPE = MAX_ALTITUDE * 0.15
         MIN_SLOPE = MAX_SLOPE * -1.0
         MAX_SLOPE_DELTA = MAX_SLOPE * 2.0
 
@@ -359,10 +359,13 @@ class WorldMap:
         topo_model_pass1 = [[None for y in range(0, self._height)] for x in range(0, self._width)]
         self.topo_model_pass2  = [[None for y in range(0, self._height)] for x in range(0, self._width)]
 
+        # Create an initial topography using altitudes and random slope changes
         print("Pass 1: altitudes and slopes...")
 
-        # Set the first square
-        topo_model_pass1[0][0] = (random.random(), 0, 0)
+        # Set the first square to be a random altitude with slopes in range
+        topo_model_pass1[0][0] = (random.uniform(MIN_ALTITUDE, MAX_ALTITUDE),
+                                  random.uniform(MIN_SLOPE, MAX_SLOPE),
+                                  random.uniform(MIN_SLOPE, MAX_SLOPE))
 
         for y in range(0, self._height):
             for x in range(0, self._width):
@@ -395,15 +398,19 @@ class WorldMap:
 
         print("Pass 2: averaging out using neighbouring points...")
 
-        # Perform second pass averaging based on adjacent altitudes
+        # Perform second pass averaging based on adjacent altitudes to smooth out topography
+        # Define which neighboring points we are going to look at
         vectors = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (1,-1), (-1,1))
-        total_altitude = 0
+
+        # Iterate through each point in the map
         for y in range(0, self._height):
             for x in range(0, self._width):
 
+                # Get the height of the current point
                 local_altitude_total, es, ss = topo_model_pass1[x][y]
                 local_altitude_points = 1
 
+                # Get the heights of the surrounding points
                 for dx,dy in vectors:
                     if x+dx < 0 or x+dx >= self._width or y+dy < 0 or y+dy >= self._height:
                         pass
@@ -413,18 +420,19 @@ class WorldMap:
                         local_altitude_points += 1
 
                 average_altitude = (local_altitude_total/local_altitude_points)
-                total_altitude += average_altitude
+
+                # Record the average altitude in a new array
                 self.topo_model_pass2[x][y] = average_altitude
 
-        overall_average_altitude = total_altitude/(self._height * self._width)
+        # Perform 3rd pass clipping to create floors in the topology
+        a = numpy.array(self.topo_model_pass2)
+        avg = numpy.mean(a)
+        std = numpy.std(a)
+        threshold = avg - (std * MIN_ALTITUDE_CLIP_FACTOR)
+        a[a < threshold] = threshold
+        self.topo_model_pass2 = a.tolist()
 
-        print("Pass 3: applying altitude floor of {0:.3}...".format(overall_average_altitude * MIN_ALTITUDE_CLIP))
-
-        # Perform 3rd pass clipping
-        for y in range(0, self._height):
-            for x in range(0, self._width):
-                altitude = self.topo_model_pass2[x][y]
-                self.topo_model_pass2[x][y] = max(altitude, overall_average_altitude * MIN_ALTITUDE_CLIP) + ALTITUDE_OFFSET
+        print("Pass 3: applying altitude floor of {0:.3}...".format(threshold))
 
 
     @property

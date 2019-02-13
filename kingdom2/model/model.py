@@ -61,7 +61,7 @@ class Game:
         self.creatables = CreatableFactoryXML(Game.GAME_DATA_DIR + "creatables.xml")
         self.creatables.load()
 
-        self.map = WorldMap("Kingdom 2", 30,30)
+        self.map = WorldMap("Kingdom 2", 50, 50)
         self.map.initialise()
 
         self.creations = []
